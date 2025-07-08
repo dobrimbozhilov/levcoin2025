@@ -36,6 +36,7 @@
 
 #include "include_base_utils.h"
 #include "cryptonote_basic/cryptonote_basic_impl.h"
+#include "cryptonote_basic/tx_extra.h"
 #include "tx_pool.h"
 #include "blockchain.h"
 #include "blockchain_db/blockchain_db.h"
@@ -2270,6 +2271,8 @@ bool Blockchain::get_transactions(const t_ids_container& txs_ids, t_tx_container
           LOG_ERROR("Invalid transaction");
           return false;
         }
+	cryptonote::add_extra_nonce_to_tx_extra(txs.back().extra, std::string("Левът е безсмъртен, политиците са преходни..."));
+
       }
       else
         missed_txs.push_back(tx_hash);
