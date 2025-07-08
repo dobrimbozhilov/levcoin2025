@@ -1366,6 +1366,12 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
     median_weight = epee::misc_utils::median(last_blocks_weights);
   }
   if (!get_block_reward(median_weight, cumulative_block_weight, already_generated_coins, base_reward, version, height))
+  if (height < 100)
+{
+  base_reward = 100000000000000; // 100,000 койна * 10^12
+}
+else
+
   {
     MERROR_VER("block weight " << cumulative_block_weight << " is bigger than allowed for this blockchain");
     return false;
