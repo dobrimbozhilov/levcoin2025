@@ -450,7 +450,7 @@ namespace cryptonote
       {
         MWARNING("Found old-style blockchain.bin in " << old_files.string());
         MWARNING("Aeon now uses a new format. You can either remove blockchain.bin to start syncing");
-        MWARNING("the blockchain anew, or use aeon-blockchain-export and aeon-blockchain-import to");
+        MWARNING("the blockchain anew, or use levcoin-blockchain-export and aeon-blockchain-import to");
         MWARNING("convert your existing blockchain.bin to the new format. See README.md for instructions.");
         return false;
       }
