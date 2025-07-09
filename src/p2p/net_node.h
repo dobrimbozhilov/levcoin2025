@@ -128,6 +128,11 @@ namespace nodetool
   private:
     const std::vector<std::string> m_seed_nodes_list =
     {
+        "coin.levcoin.net:11180",
+        "coin.komentari.com:11180",
+        "coin.dobribozhilov.com:11180",
+        "coin.ailabortory.eu:11180",
+        "coin.semebo.com:11180" 
     };
 
     bool islimitup=false;
