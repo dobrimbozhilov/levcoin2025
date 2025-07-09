@@ -234,6 +234,6 @@ target_link_libraries(blockchain_depth
 
 set_property(TARGET blockchain_depth
 	PROPERTY
-	OUTPUT_NAME "aeon-blockchain-depth")
+	OUTPUT_NAME "levcoin-blockchain-depth")
 install(TARGETS blockchain_depth DESTINATION bin)
 
