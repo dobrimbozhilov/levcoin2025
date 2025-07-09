@@ -213,7 +213,7 @@ target_link_libraries(blockchain_ancestry
 
 set_property(TARGET blockchain_ancestry
 	PROPERTY
-	OUTPUT_NAME "aeon-blockchain-ancestry")
+	OUTPUT_NAME "levcoin-blockchain-ancestry")
 install(TARGETS blockchain_ancestry DESTINATION bin)
 
 monero_add_executable(blockchain_depth
