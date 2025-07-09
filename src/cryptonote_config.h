@@ -176,7 +176,7 @@ namespace config
   boost::uuids::uuid const NETWORK_ID = { {
       0x32 ,0x32, 0xF3, 0x91 , 0x81, 0x18 , 0x41, 0x61, 0x17, 0x31, 0x00, 0x82, 0x16, 0xA1, 0xA1, 0x10
     } }; // Bender's nightmare
-  std::string const GENESIS_TX = "";
+  std::string const GENESIS_TX = "013c01ff0005eafbdf8001029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807180f882ad16022a74a3c4c36d32e95633d44ba9a7b8188297b2ac91afecab826b86fabaa709168088aca3cf020252d128bc9913d5ee8b702c37609917c2357b2f587e5de5622348a3acd718e5d680e0a596bb1102b8ed916c56b3a99c9cdf22c7be7ec4e85587e5d40bc46bf6995313c288ad841e80e0bcefa757021b452b4ac6c6419e06181f8c9f0734bd5bb132d8b75b44bbcd07dd8f553acba62101bacda920c7488f8ddb03d975f3659efb36a09375ffae9493e4e11d0b3ead6bdf";
   uint32_t const GENESIS_NONCE = 10000;
 
   namespace testnet
@@ -190,7 +190,7 @@ namespace config
     boost::uuids::uuid const NETWORK_ID = { {
         0x32 ,0x32, 0xF3, 0x91 , 0x81, 0x18 , 0x41, 0x61, 0x17, 0x31, 0x00, 0x82, 0x16, 0xA1, 0xA1, 0x11
       } }; // Bender's daydream
-    std::string const GENESIS_TX = "";
+    std::string const GENESIS_TX = "013c01ff0005eafbdf8001029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807180f882ad16022a74a3c4c36d32e95633d44ba9a7b8188297b2ac91afecab826b86fabaa709168088aca3cf020252d128bc9913d5ee8b702c37609917c2357b2f587e5de5622348a3acd718e5d680e0a596bb1102b8ed916c56b3a99c9cdf22c7be7ec4e85587e5d40bc46bf6995313c288ad841e80e0bcefa757021b452b4ac6c6419e06181f8c9f0734bd5bb132d8b75b44bbcd07dd8f553acba62101bacda920c7488f8ddb03d975f3659efb36a09375ffae9493e4e11d0b3ead6bdf";
     uint32_t const GENESIS_NONCE = 10001;
 
 
@@ -207,7 +207,7 @@ namespace config
     boost::uuids::uuid const NETWORK_ID = { {
         0x32 ,0x32, 0xF3, 0x91 , 0x81, 0x18 , 0x41, 0x61, 0x17, 0x31, 0x00, 0x82, 0x16, 0xA1, 0xA1, 0x12
       } }; // Bender's daydream
-    std::string const GENESIS_TX = "";
+    std::string const GENESIS_TX = "013c01ff0005eafbdf8001029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807180f882ad16022a74a3c4c36d32e95633d44ba9a7b8188297b2ac91afecab826b86fabaa709168088aca3cf020252d128bc9913d5ee8b702c37609917c2357b2f587e5de5622348a3acd718e5d680e0a596bb1102b8ed916c56b3a99c9cdf22c7be7ec4e85587e5d40bc46bf6995313c288ad841e80e0bcefa757021b452b4ac6c6419e06181f8c9f0734bd5bb132d8b75b44bbcd07dd8f553acba62101bacda920c7488f8ddb03d975f3659efb36a09375ffae9493e4e11d0b3ead6bdf";
     uint32_t const GENESIS_NONCE = 10002;
   }
 }
