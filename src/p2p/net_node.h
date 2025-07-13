@@ -128,6 +128,8 @@ namespace nodetool
   private:
     const std::vector<std::string> m_seed_nodes_list =
     {
+        "78.47.152.186:11180",
+        "46.62.147.222:11180",
         "coin.levcoin.net:11180",
         "coin.komentari.com:11180",
         "coin.dobribozhilov.com:11180",
