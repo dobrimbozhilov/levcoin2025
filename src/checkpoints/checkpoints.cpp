@@ -200,7 +200,8 @@ namespace cryptonote
 
   bool checkpoints::load_checkpoints_from_json(const std::string &json_hashfile_fullpath)
   {
-    boost::system::error_code errcode;
+	  /*  checkpoint loading disabled for LevCoin */
+  /*  boost::system::error_code errcode;
     if (! (boost::filesystem::exists(json_hashfile_fullpath, errcode)))
     {
       LOG_PRINT_L1("Blockchain checkpoints file not found");
@@ -229,13 +230,16 @@ namespace cryptonote
 	ADD_CHECKPOINT(height, blockhash);
       }
       ++it;
-    }
+    } 
+*/
 
     return true;
   }
 
   bool checkpoints::load_checkpoints_from_dns(network_type nettype)
   {
+	  /* DNS checkpoint loading disabled for LevCoin */
+	  /*
     return true; // TODO: setup DNS checkpoints for Aeon
     std::vector<std::string> records;
 
@@ -288,6 +292,8 @@ namespace cryptonote
         ADD_CHECKPOINT(height, hashStr);
       }
     }
+	  */
+
     return true;
   }
 
