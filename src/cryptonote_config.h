@@ -56,8 +56,8 @@
 #define BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW               60
 
 // MONEY_SUPPLY - total number coins to be generated
-#define MONEY_SUPPLY                                    ((uint64_t)1000000000000000000000)
-#define GENESIS_BLOCK_REWARD                            ((uint64_t)10000000000000000000)
+#define MONEY_SUPPLY                                    ((uint64_t)(-1))
+// #define GENESIS_BLOCK_REWARD                            ((uint64_t)10000000000000000000)
 #define EMISSION_SPEED_FACTOR_PER_MINUTE                (20)
 #define FINAL_SUBSIDY_PER_MINUTE                        ((uint64_t)300000000000) // 3 * pow(10, 11)
 
@@ -70,9 +70,9 @@
 // COIN - number of smallest units in one coin
 #define COIN                                            ((uint64_t)1000000000000) // pow(10, 12)
 
-#define DEFAULT_FEE_V1                                  ((uint64_t)10000000000) // pow(10, 10)
+#define DEFAULT_FEE_V1                                  ((uint64_t)10000000) // pow(10, 7)
 
-#define FEE_PER_KB                                      ((uint64_t)1000000000) // 1 * pow(10, 9)
+#define FEE_PER_KB                                      ((uint64_t)1000000) // 1 * pow(10, 6)
 
 #define ORPHANED_BLOCKS_MAX_COUNT                       100
 
