@@ -192,7 +192,8 @@ namespace cryptonote
       
       return true;
     }
-    ADD_CHECKPOINT2(2288,      "3a6af110204571a572fe199a34076df770708a70cf6fa5a007b1f224a4a8bea8", "1752765454");
+	  //stopped due to possible coin restart
+//    ADD_CHECKPOINT2(2288,      "3a6af110204571a572fe199a34076df770708a70cf6fa5a007b1f224a4a8bea8", "1752765454");
     
 
     return true;
