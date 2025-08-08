@@ -27,6 +27,12 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
+#ifdef __cplusplus
+  #include <cstdint>
+#else
+  #include <stdint.h>
+#endif
+
 
 #pragma once
 

@@ -34,6 +34,12 @@
 
 //#include "net_utils_base.h"
 //#include <boost/lambda/bind.hpp>
+
+#define BOOST_ASIO_ENABLE_OLD_NAMES
+#define BOOST_ASIO_HAS_OLD_RESOLVER
+#define BOOST_ASIO_HAS_IOCP 1
+
+
 #include <boost/foreach.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/uuid/random_generator.hpp>
@@ -152,8 +158,9 @@ PRAGMA_WARNING_DISABLE_VS(4355)
     CHECK_AND_NO_ASSERT_MES(!ec, false, "Failed to get local endpoint: " << ec.message() << ':' << ec.value());
 
     context = boost::value_initialized<t_connection_context>();
-    const unsigned long ip_{boost::asio::detail::socket_ops::host_to_network_long(remote_ep.address().to_v4().to_ulong())};
-    m_local = epee::net_utils::is_ip_loopback(ip_) || epee::net_utils::is_ip_local(ip_);
+    // const unsigned long ip_{boost::asio::detail::socket_ops::host_to_network_long(remote_ep.address().to_v4().to_ulong())}; // fix for win compilation 082025
+    const unsigned long ip_{boost::asio::detail::socket_ops::host_to_network_long(remote_ep.address().to_v4().to_uint())};
+	m_local = epee::net_utils::is_ip_loopback(ip_) || epee::net_utils::is_ip_local(ip_);
 
     // create a random uuid, we don't need crypto strength here
     const boost::uuids::uuid random_uuid = boost::uuids::random_generator()();
@@ -211,7 +218,8 @@ PRAGMA_WARNING_DISABLE_VS(4355)
     if(!self)
       return false;
 
-    strand_.post(boost::bind(&connection<t_protocol_handler>::call_back_starter, self));
+    strand_.post(boost::bind(&connection<t_protocol_handler>::call_back_starter, self), boost::asio::get_associated_allocator(self)); // fix for win compilation 082025
+
     CATCH_ENTRY_L0("connection<t_protocol_handler>::request_callback()", false);
     return true;
   }
@@ -830,7 +838,7 @@ PRAGMA_WARNING_DISABLE_VS(4355)
 		server_type_map["P2P"] = e_connection_type_P2P;
   }
   //---------------------------------------------------------------------------------
-  template<class t_protocol_handler>
+  /* template<class t_protocol_handler>
   bool boosted_tcp_server<t_protocol_handler>::init_server(uint32_t port, const std::string address)
   {
     TRY_ENTRY();
@@ -865,7 +873,57 @@ PRAGMA_WARNING_DISABLE_VS(4355)
       MFATAL("Error starting server");
       return false;
     }
+  } */ // fix for win compilation 082025
+  
+  template<class t_protocol_handler>
+bool boosted_tcp_server<t_protocol_handler>::init_server(uint32_t port, const std::string address)
+{
+  TRY_ENTRY();
+  m_stop_signal_sent = false;
+  m_port = port;
+  m_address = address;
+
+  boost::asio::ip::tcp::resolver resolver(io_service_);
+  boost::system::error_code ec;
+
+  auto query = std::make_pair(address, boost::lexical_cast<std::string>(port));
+  auto results = resolver.resolve(query.first, query.second, ec);
+
+  if (ec || results.empty()) {
+    MFATAL("Failed to resolve bind address " << address << " : " << ec.message());
+    return false;
   }
+
+  boost::asio::ip::tcp::endpoint endpoint = *results.begin();
+
+  acceptor_.open(endpoint.protocol());
+  acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+  acceptor_.bind(endpoint);
+  acceptor_.listen();
+
+  boost::asio::ip::tcp::endpoint binded_endpoint = acceptor_.local_endpoint();
+  m_port = binded_endpoint.port();
+  MDEBUG("start accept");
+
+  new_connection_.reset(new connection<t_protocol_handler>(io_service_, m_config, m_sock_count, m_sock_number, m_pfilter, m_connection_type));
+  acceptor_.async_accept(new_connection_->socket(),
+    std::bind(&boosted_tcp_server<t_protocol_handler>::handle_accept, this,
+    std::placeholders::_1));
+
+  return true;
+}
+catch (const std::exception &e)
+{
+  MFATAL("Error starting server: " << e.what());
+  return false;
+}
+catch (...)
+{
+  MFATAL("Error starting server");
+  return false;
+}
+}
+
   //-----------------------------------------------------------------------------
 PUSH_WARNINGS
 DISABLE_GCC_WARNING(maybe-uninitialized)
@@ -1095,7 +1153,7 @@ POP_WARNINGS
     boost::asio::ip::tcp::socket&  sock_ = new_connection_l->socket();
     
     //////////////////////////////////////////////////////////////////////////
-    boost::asio::ip::tcp::resolver resolver(io_service_);
+   /* boost::asio::ip::tcp::resolver resolver(io_service_);
     boost::asio::ip::tcp::resolver::query query(boost::asio::ip::tcp::v4(), adr, port, boost::asio::ip::tcp::resolver::query::canonical_name);
     boost::asio::ip::tcp::resolver::iterator iterator = resolver.resolve(query);
     boost::asio::ip::tcp::resolver::iterator end;
@@ -1103,17 +1161,37 @@ POP_WARNINGS
     {
       _erro("Failed to resolve " << adr);
       return false;
-    }
+    } */ // fix for win compilation 082025
+	
+	boost::asio::ip::tcp::resolver resolver(io_service_);
+boost::system::error_code ec;
+
+// "query" заместител – просто символично име
+auto query = std::make_pair(adr, port);
+
+// "iterator" заместител
+auto results = resolver.resolve(query.first, query.second, ec);
+
+// съвместимост със старото: "iterator", "end"
+auto iterator = results.begin();
+auto end = results.end();
+
+if (ec || iterator == end) {
+  _erro("Failed to resolve " << adr << " : " << ec.message());
+  return false;
+}
+
     //////////////////////////////////////////////////////////////////////////
 
 
     //boost::asio::ip::tcp::endpoint remote_endpoint(boost::asio::ip::address::from_string(addr.c_str()), port);
-    boost::asio::ip::tcp::endpoint remote_endpoint(*iterator);
-     
+    // boost::asio::ip::tcp::endpoint remote_endpoint(*iterator); // fix for win compilation 082025
+     boost::asio::ip::tcp::endpoint remote_endpoint = *iterator;
     sock_.open(remote_endpoint.protocol());
     if(bind_ip != "0.0.0.0" && bind_ip != "0" && bind_ip != "" )
     {
-      boost::asio::ip::tcp::endpoint local_endpoint(boost::asio::ip::address::from_string(bind_ip.c_str()), 0);
+      //boost::asio::ip::tcp::endpoint local_endpoint(boost::asio::ip::address::from_string(bind_ip.c_str()), 0); // fix for win compilation 082025
+	  boost::asio::ip::tcp::endpoint local_endpoint(boost::asio::ip::make_address(bind_ip), 0);
       boost::system::error_code ec;
       sock_.bind(local_endpoint, ec);
       if (ec)
@@ -1129,7 +1207,7 @@ POP_WARNINGS
     NOTICE: be careful to make sync connection from event handler: in case if all threads suddenly do sync connect, there will be no thread to dispatch events from io service.
     */
 
-    boost::system::error_code ec = boost::asio::error::would_block;
+   // boost::system::error_code ec = boost::asio::error::would_block; // fix for win compilation 082025
 
     //have another free thread(s), work in wait mode, without event handling
     struct local_async_context
@@ -1212,7 +1290,7 @@ POP_WARNINGS
     boost::asio::ip::tcp::socket&  sock_ = new_connection_l->socket();
     
     //////////////////////////////////////////////////////////////////////////
-    boost::asio::ip::tcp::resolver resolver(io_service_);
+    /* boost::asio::ip::tcp::resolver resolver(io_service_);
     boost::asio::ip::tcp::resolver::query query(boost::asio::ip::tcp::v4(), adr, port, boost::asio::ip::tcp::resolver::query::canonical_name);
     boost::asio::ip::tcp::resolver::iterator iterator = resolver.resolve(query);
     boost::asio::ip::tcp::resolver::iterator end;
@@ -1220,15 +1298,33 @@ POP_WARNINGS
     {
       _erro("Failed to resolve " << adr);
       return false;
-    }
+    } */ // fix for win compilation 082025
+	
+	
+	boost::asio::ip::tcp::resolver resolver(io_service_);
+boost::system::error_code ec;
+
+auto query = std::make_pair(adr, port); // съхраняваме за съвместимост със стария код
+auto results = resolver.resolve(query.first, query.second, ec);
+auto iterator = results.begin();
+auto end = results.end();
+
+if (ec || iterator == end)
+{
+  _erro("Failed to resolve " << adr << " : " << ec.message());
+  return false;
+}
+
     //////////////////////////////////////////////////////////////////////////
     boost::asio::ip::tcp::endpoint remote_endpoint(*iterator);
      
     sock_.open(remote_endpoint.protocol());
     if(bind_ip != "0.0.0.0" && bind_ip != "0" && bind_ip != "" )
     {
-      boost::asio::ip::tcp::endpoint local_endpoint(boost::asio::ip::address::from_string(bind_ip.c_str()), 0);
-      boost::system::error_code ec;
+     // boost::asio::ip::tcp::endpoint local_endpoint(boost::asio::ip::address::from_string(bind_ip.c_str()), 0);// fix for win compilation 082025
+	 boost::asio::ip::tcp::endpoint local_endpoint(boost::asio::ip::make_address(bind_ip), 0);
+      
+	  boost::system::error_code ec;
       sock_.bind(local_endpoint, ec);
       if (ec)
       {

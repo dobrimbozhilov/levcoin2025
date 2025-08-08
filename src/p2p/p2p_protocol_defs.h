@@ -41,6 +41,12 @@
 #include "crypto/crypto.h"
 #endif
 
+// fix for win compilation 082025
+namespace std {
+  template <>
+  struct is_pod<boost::uuids::uuid> : std::true_type {};
+}
+
 namespace nodetool
 {
   typedef boost::uuids::uuid uuid;

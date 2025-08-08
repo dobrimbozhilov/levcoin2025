@@ -135,7 +135,7 @@ namespace net_utils
 
 				//////////////////////////////////////////////////////////////////////////
 
-				boost::asio::ip::tcp::resolver resolver(m_io_service);
+				/* boost::asio::ip::tcp::resolver resolver(m_io_service);
 				boost::asio::ip::tcp::resolver::query query(boost::asio::ip::tcp::v4(), addr, port, boost::asio::ip::tcp::resolver::query::canonical_name);
 				boost::asio::ip::tcp::resolver::iterator iterator = resolver.resolve(query);
 				boost::asio::ip::tcp::resolver::iterator end;
@@ -143,7 +143,24 @@ namespace net_utils
 				{
 					LOG_ERROR("Failed to resolve " << addr);
 					return false;
+				} */ // fix for win compilation 082025
+				boost::asio::ip::tcp::resolver resolver(m_io_service);
+				boost::asio::ip::tcp::resolver::results_type endpoints;
+
+				boost::system::error_code ec;
+				endpoints = resolver.resolve(addr, port, ec);
+				if (ec || endpoints.empty())
+				{
+					LOG_ERROR("Failed to resolve address " << addr << ":" << port << " - " << ec.message());
+					return false;
 				}
+
+				
+				auto iterator = endpoints.begin();
+				auto end = endpoints.end();
+
+				
+				
 
 				//////////////////////////////////////////////////////////////////////////
 
@@ -155,15 +172,18 @@ namespace net_utils
 				m_ssl_socket.next_layer().open(remote_endpoint.protocol());
 				if(bind_ip != "0.0.0.0" && bind_ip != "0" && bind_ip != "" )
 				{
-					boost::asio::ip::tcp::endpoint local_endpoint(boost::asio::ip::address::from_string(addr.c_str()), 0);
+					// boost::asio::ip::tcp::endpoint local_endpoint(boost::asio::ip::address::from_string(addr.c_str()), 0); // fix for win compilation 082025
+					boost::asio::ip::tcp::endpoint local_endpoint(boost::asio::ip::make_address(addr), 0);					
 					m_ssl_socket.next_layer().bind(local_endpoint);
 				}
 
 				
-				m_deadline.expires_from_now(timeout);
+				// m_deadline.expires_from_now(timeout); // fix for win compilation 082025
+				m_deadline.expires_after(timeout);
 
 
-				boost::system::error_code ec = boost::asio::error::would_block;
+				// boost::system::error_code ec = boost::asio::error::would_block;
+				ec = boost::asio::error::would_block;
 
 				m_ssl_socket.next_layer().async_connect(remote_endpoint, boost::lambda::var(ec) = boost::lambda::_1);
 				while (ec == boost::asio::error::would_block)
@@ -239,14 +259,18 @@ namespace net_utils
 
 			try
 			{
-				m_deadline.expires_from_now(timeout);
+				// m_deadline.expires_from_now(timeout); // fix for win compilation 082025
+				m_deadline.expires_after(timeout);
 
 				// Set up the variable that receives the result of the asynchronous
 				// operation. The error code is set to would_block to signal that the
 				// operation is incomplete. Asio guarantees that its asynchronous
 				// operations will never fail with would_block, so any other value in
 				// ec indicates completion.
-				boost::system::error_code ec = boost::asio::error::would_block;
+				//boost::system::error_code ec = boost::asio::error::would_block;
+				boost::system::error_code ec;
+
+				ec = boost::asio::error::would_block;
 
 				// Start the asynchronous operation itself. The boost::lambda function
 				// object is used as a callback and will update the ec variable when the
@@ -356,7 +380,8 @@ namespace net_utils
 				// Set a deadline for the asynchronous operation. Since this function uses
 				// a composed operation (async_read_until), the deadline applies to the
 				// entire operation, rather than individual reads from the socket.
-				m_deadline.expires_from_now(timeout);
+				// m_deadline.expires_from_now(timeout); // fix for win compilation 082025
+				m_deadline.expires_after(timeout);
 
 				// Set up the variable that receives the result of the asynchronous
 				// operation. The error code is set to would_block to signal that the
@@ -370,7 +395,12 @@ namespace net_utils
 				// operation completes. The blocking_udp_client.cpp example shows how you
 				// can use boost::bind rather than boost::lambda.
 
-				boost::system::error_code ec = boost::asio::error::would_block;
+				//boost::system::error_code ec = boost::asio::error::would_block;
+				boost::system::error_code ec;
+
+
+				ec = boost::asio::error::would_block;
+
 				size_t bytes_transfered = 0;
 			
 				handler_obj hndlr(ec, bytes_transfered);
@@ -438,7 +468,8 @@ namespace net_utils
 				// Set a deadline for the asynchronous operation. Since this function uses
 				// a composed operation (async_read_until), the deadline applies to the
 				// entire operation, rather than individual reads from the socket.
-				m_deadline.expires_from_now(timeout);
+				//m_deadline.expires_from_now(timeout); // fix for win compilation 082025
+				m_deadline.expires_after(timeout);
 
 				// Set up the variable that receives the result of the asynchronous
 				// operation. The error code is set to would_block to signal that the
@@ -453,7 +484,11 @@ namespace net_utils
 				// can use boost::bind rather than boost::lambda.
 
 				buff.resize(static_cast<size_t>(sz));
-				boost::system::error_code ec = boost::asio::error::would_block;
+				//boost::system::error_code ec = boost::asio::error::would_block;
+				boost::system::error_code ec;
+
+				ec = boost::asio::error::would_block;
+
 				size_t bytes_transfered = 0;
 
 				
@@ -543,7 +578,8 @@ namespace net_utils
 			// Check whether the deadline has passed. We compare the deadline against
 			// the current time since a new asynchronous operation may have moved the
 			// deadline before this actor had a chance to run.
-			if (m_deadline.expires_at() <= std::chrono::steady_clock::now())
+			// if (m_deadline.expires_at() <= std::chrono::steady_clock::now()) // fix for win compilation 082025
+			if (m_deadline.expiry() <= std::chrono::steady_clock::now())
 			{
 				// The deadline has passed. The socket is closed so that any outstanding
 				// asynchronous operations are cancelled. This allows the blocked
@@ -563,8 +599,13 @@ namespace net_utils
 
 		void shutdown_ssl() {
 			// ssl socket shutdown blocks if server doesn't respond. We close after 2 secs
-			boost::system::error_code ec = boost::asio::error::would_block;
-			m_deadline.expires_from_now(std::chrono::milliseconds(2000));
+			//boost::system::error_code ec = boost::asio::error::would_block;
+			boost::system::error_code ec;
+
+			ec = boost::asio::error::would_block;
+
+			// m_deadline.expires_from_now(std::chrono::milliseconds(2000)); // fix for win compilation 082025
+			m_deadline.expires_after(std::chrono::milliseconds(2000));
 			m_ssl_socket.async_shutdown(boost::lambda::var(ec) = boost::lambda::_1);
 			while (ec == boost::asio::error::would_block)
 			{

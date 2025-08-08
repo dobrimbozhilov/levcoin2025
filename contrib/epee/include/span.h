@@ -27,6 +27,7 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
+#include <boost/uuid/uuid.hpp>
 
 #include <algorithm>
 #include <cstdint>
@@ -160,5 +161,10 @@ namespace epee
     static_assert(!std::is_empty<T>(), "empty types will not work -> sizeof == 1");
     static_assert(!has_padding<T>(), "source type may have padding");
     return {reinterpret_cast<std::uint8_t*>(std::addressof(src)), sizeof(T)};
+  }
+  
+  template<>
+  constexpr inline bool has_padding<boost::uuids::uuid>() noexcept {
+    return false;
   }
 }

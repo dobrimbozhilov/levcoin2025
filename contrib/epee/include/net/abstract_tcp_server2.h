@@ -30,6 +30,9 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // 
 
+#define BOOST_ASIO_ENABLE_OLD_NAMES
+#define BOOST_ASIO_HAS_OLD_RESOLVER
+#define BOOST_ASIO_HAS_IOCP 1
 
 
 #ifndef _ABSTRACT_TCP_SERVER2_H_ 
@@ -288,7 +291,9 @@ namespace net_utils
     template<class t_handler>
     bool async_call(t_handler t_callback)
     {
-      io_service_.post(t_callback);
+      // io_service_.post(t_callback); // fix for win compilation 082025
+	  boost::asio::post(io_service_, t_callback);
+
       return true;
     }
 

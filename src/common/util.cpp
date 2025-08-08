@@ -876,7 +876,7 @@ std::string get_nix_version_display_string()
     }
 
     // resolve to IP
-    boost::asio::io_service io_service;
+   /* boost::asio::io_service io_service;
     boost::asio::ip::tcp::resolver resolver(io_service);
     boost::asio::ip::tcp::resolver::query query(u_c.host, "");
     boost::asio::ip::tcp::resolver::iterator i = resolver.resolve(query);
@@ -889,7 +889,22 @@ std::string get_nix_version_display_string()
         return true;
       }
       ++i;
-    }
+    } */ // fix for win compilation 082025
+	boost::asio::io_service io_service;
+	boost::asio::ip::tcp::resolver resolver(io_service);
+	boost::asio::ip::tcp::resolver::results_type results = resolver.resolve(u_c.host, "");
+
+	for (const auto& result : results)
+	{
+	  const boost::asio::ip::tcp::endpoint& ep = result.endpoint();
+	  if (ep.address().is_loopback())
+	  {
+		MDEBUG("Address '" << address << "' is local");
+		return true;
+	  }
+	}
+
+	
 
     MDEBUG("Address '" << address << "' is not local");
     return false;

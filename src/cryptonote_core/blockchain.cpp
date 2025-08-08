@@ -27,6 +27,7 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
+#include <boost/asio/post.hpp>
 
 #include <algorithm>
 #include <cstdio>
@@ -158,7 +159,12 @@ Blockchain::Blockchain(tx_memory_pool& tx_pool) :
   m_long_term_block_weights_cache_rolling_median(CRYPTONOTE_LONG_TERM_BLOCK_WEIGHT_WINDOW_SIZE),
   m_difficulty_for_next_block_top_hash(crypto::null_hash),
   m_difficulty_for_next_block(1),
-  m_btc_valid(false)
+ // m_btc_valid(false) // fix for win compilation 082025
+
+ m_async_service(),
+m_async_work_idle(boost::asio::make_work_guard(m_async_service)),
+m_btc_valid(false)
+
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
 }
@@ -425,7 +431,10 @@ bool Blockchain::init(BlockchainDB* db, const network_type nettype, bool offline
 
   // create general purpose async service queue
 
-  m_async_work_idle = std::unique_ptr < boost::asio::io_service::work > (new boost::asio::io_service::work(m_async_service));
+  // m_async_work_idle = std::unique_ptr < boost::asio::io_service::work > (new boost::asio::io_service::work(m_async_service));
+  
+ // m_async_work_idle = boost::asio::make_work_guard(m_async_service);
+
   // we only need 1
   m_async_pool.create_thread(boost::bind(&boost::asio::io_service::run, &m_async_service));
 
@@ -4102,7 +4111,9 @@ bool Blockchain::cleanup_handle_incoming_blocks(bool force_sync)
       {
         m_sync_counter = 0;
         m_bytes_to_sync = 0;
-        m_async_service.dispatch(boost::bind(&Blockchain::store_blockchain, this));
+       // m_async_service.dispatch(boost::bind(&Blockchain::store_blockchain, this));
+		boost::asio::post(m_async_service, boost::bind(&Blockchain::store_blockchain, this));
+
       }
       else if(m_db_sync_mode == db_sync)
       {

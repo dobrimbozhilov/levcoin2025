@@ -30,7 +30,11 @@
 #define _NET_UTILS_BASE_H_
 
 #include <boost/uuid/uuid.hpp>
-#include <boost/asio/io_service.hpp>
+//#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
+namespace boost { namespace asio {
+  using io_service = io_context;
+}}
 #include <typeinfo>
 #include <type_traits>
 #include "serialization/keyvalue_serialization.h"

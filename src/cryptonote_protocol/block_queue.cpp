@@ -37,7 +37,7 @@
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "cn.block_queue"
-
+/*
 namespace std {
   static_assert(sizeof(size_t) <= sizeof(boost::uuids::uuid), "boost::uuids::uuid too small");
   template<> struct hash<boost::uuids::uuid> {
@@ -45,7 +45,9 @@ namespace std {
       return reinterpret_cast<const std::size_t &>(_v);
     }
   };
-}
+}*/
+// fix for win compilation 082025
+
 
 namespace cryptonote
 {

@@ -106,7 +106,9 @@ namespace nodetool
       catch (...)
       {
         // if failed, try reading in unportable mode
-        boost::filesystem::copy_file(state_file_path, state_file_path + ".unportable", boost::filesystem::copy_option::overwrite_if_exists);
+        // boost::filesystem::copy_file(state_file_path, state_file_path + ".unportable", boost::filesystem::copy_option::overwrite_if_exists);// fix for win compilation 082025
+
+		boost::filesystem::copy_file(state_file_path, state_file_path + ".unportable", boost::filesystem::copy_options::overwrite_existing);
         p2p_data.close();
         p2p_data.open( state_file_path , std::ios_base::binary | std::ios_base::in);
         if(!p2p_data.fail())
@@ -347,7 +349,8 @@ namespace nodetool
     , std::string const & addr
     , uint16_t default_port
     )
-  {
+	// fix for win compilation 082025
+ /* {
     using namespace boost::asio;
 
     std::string host = addr;
@@ -374,17 +377,86 @@ namespace nodetool
       ip::tcp::endpoint endpoint = *i;
       if (endpoint.address().is_v4())
       {
-        epee::net_utils::network_address na{epee::net_utils::ipv4_network_address{boost::asio::detail::socket_ops::host_to_network_long(endpoint.address().to_v4().to_ulong()), endpoint.port()}};
+        
+	   
+
+	   auto bytes = endpoint.address().to_v4().to_bytes();
+			uint32_t ip = (uint32_t(bytes[0]) << 24) | (uint32_t(bytes[1]) << 16) | (uint32_t(bytes[2]) << 8) | uint32_t(bytes[3]);
+
+			epee::net_utils::network_address na{
+			  epee::net_utils::ipv4_network_address{
+				boost::asio::detail::socket_ops::host_to_network_long(ip),
+				endpoint.port()
+			  }
+			};
+
         seed_nodes.push_back(na);
         MINFO("Added node: " << na.str());
       }
       else
       {
-        MWARNING("IPv6 unsupported, skip '" << host << "' -> " << endpoint.address().to_v6().to_string(ec));
+	  // MWARNING("IPv6 unsupported, skip '" << host << "' -> " << endpoint.address().to_v6().to_string(ec)); 
+
+        MWARNING("IPv6 unsupported, skip '" << host << "' -> " << endpoint.address().to_v6().to_string());
       }
-    }
+    }   
+
+	
+		
+
     return true;
+  } */
+  
+  {
+  using namespace boost::asio;
+
+  std::string host = addr;
+  std::string port = std::to_string(default_port);
+  size_t pos = addr.find_last_of(':');
+  if (std::string::npos != pos)
+  {
+    CHECK_AND_ASSERT_MES(addr.length() - 1 != pos && 0 != pos, false, "Failed to parse seed address from string: '" << addr << '\'');
+    host = addr.substr(0, pos);
+    port = addr.substr(pos + 1);
   }
+  MINFO("Resolving node address: host=" << host << ", port=" << port);
+
+  io_service io_srv;
+  ip::tcp::resolver resolver(io_srv);
+  boost::system::error_code ec;
+
+  // ✅ Новият начин за resolve — директно с host и port
+  auto results = resolver.resolve(host, port, ec);
+  CHECK_AND_ASSERT_MES(!ec, false, "Failed to resolve host name '" << host << "': " << ec.message() << ':' << ec.value());
+
+  for (const auto& result : results)
+  {
+    ip::tcp::endpoint endpoint = result.endpoint();
+
+    if (endpoint.address().is_v4())
+    {
+      auto bytes = endpoint.address().to_v4().to_bytes();
+      uint32_t ip = (uint32_t(bytes[0]) << 24) | (uint32_t(bytes[1]) << 16) | (uint32_t(bytes[2]) << 8) | uint32_t(bytes[3]);
+
+      epee::net_utils::network_address na{
+        epee::net_utils::ipv4_network_address{
+          boost::asio::detail::socket_ops::host_to_network_long(ip),
+          endpoint.port()
+        }
+      };
+
+      seed_nodes.push_back(na);
+      MINFO("Added node: " << na.str());
+    }
+    else
+    {
+      MWARNING("IPv6 unsupported, skip '" << host << "' -> " << endpoint.address().to_v6().to_string());
+    }
+  }
+
+  return true;
+}
+
 
   //-----------------------------------------------------------------------------------
   template<class t_payload_net_handler>
