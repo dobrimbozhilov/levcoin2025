@@ -37,7 +37,9 @@
 
 #define BOOST_ASIO_ENABLE_OLD_NAMES
 #define BOOST_ASIO_HAS_OLD_RESOLVER
+#ifdef _WIN32
 #define BOOST_ASIO_HAS_IOCP 1
+#endif
 
 
 #include <boost/foreach.hpp>

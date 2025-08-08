@@ -28,6 +28,7 @@
 //
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
+#include <boost/filesystem/directory.hpp>
 #include <sstream>
 #include <numeric>
 #include <boost/utility/value_init.hpp>
@@ -896,10 +897,12 @@ namespace cryptonote
       boost::tribool on_battery = boost::logic::tribool(boost::logic::indeterminate);
       if (boost::filesystem::is_directory(power_supply_class_path))
       {
-        const boost::filesystem::directory_iterator end_itr;
-        for (boost::filesystem::directory_iterator iter(power_supply_class_path); iter != end_itr; ++iter)
-        {
-          const boost::filesystem::path& power_supply_path = iter->path();
+       // const boost::filesystem::directory_iterator end_itr;
+       // for (boost::filesystem::directory_iterator iter(power_supply_class_path); iter != end_itr; ++iter)
+		for (const auto& entry : boost::filesystem::directory_iterator(power_supply_class_path))
+		{
+			
+          const boost::filesystem::path& power_supply_path = entry.path();
           if (boost::filesystem::is_directory(power_supply_path))
           {
             boost::filesystem::path power_supply_type_path = power_supply_path / "type";
