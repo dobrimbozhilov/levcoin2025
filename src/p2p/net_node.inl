@@ -232,7 +232,7 @@ namespace nodetool
     return true;
   }
   //-----------------------------------------------------------------------------------
-  template<class t_payload_net_handler>
+ /* template<class t_payload_net_handler>
   bool node_server<t_payload_net_handler>::add_host_fail(const epee::net_utils::network_address &address)
   {
     CRITICAL_REGION_LOCAL(m_host_fails_score_lock);
@@ -246,7 +246,40 @@ namespace nodetool
       block_host(address);
     }
     return true;
-  }
+  } */
+// Added for not too fast host-block on initial synchronization
+bool node_server<t_payload_net_handler>::add_host_fail(const epee::net_utils::network_address &address)
+{
+    CRITICAL_REGION_LOCAL(m_host_fails_score_lock);
+    uint64_t fails = ++m_host_fails_score[address.host_str()];
+    MDEBUG("Host " << address.host_str() << " fail score=" << fails);
+
+    // Base limit
+    uint64_t limit = P2P_IP_FAILS_BEFORE_BLOCK;
+
+    // Current and target heihght
+    uint64_t current_height = m_payload_handler.get_core().get_current_blockchain_height();
+    uint64_t target_height  = m_payload_handler.get_core().get_target_blockchain_height();
+
+    // If we are 1000 blocks behind increase limit 
+    if (target_height > current_height && (target_height - current_height) > 1000)
+    {
+        limit *= 10;
+        MDEBUG("Initial sync or >1000 blocks behind, increasing ban limit to " << limit);
+    }
+
+    if (fails > limit)
+    {
+        auto it = m_host_fails_score.find(address.host_str());
+        CHECK_AND_ASSERT_MES(it != m_host_fails_score.end(), false, "internal error");
+        it->second = limit / 2; // half of actual limit
+        block_host(address);
+    }
+
+    return true;
+}
+
+
   //-----------------------------------------------------------------------------------
   template<class t_payload_net_handler>
   bool node_server<t_payload_net_handler>::parse_peer_from_string(epee::net_utils::network_address& pe, const std::string& node_addr, uint16_t default_port)
